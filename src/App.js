@@ -460,11 +460,11 @@ const App = () => {
             className="circle"
             style={{
               "--percentage": overallScore,
-              "--percentage-color":  "black",
+              "--percentage-color": "black",
             }}
           >
-            <div color="black" className="percentage">
-              <span color="black">{overallScore}%</span>
+            <div className="percentage">
+              <span>{overallScore}%</span>
             </div>
           </div>
         </div>

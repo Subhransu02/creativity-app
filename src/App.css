@@ -53,7 +53,6 @@ h1 {
   justify-content: center;
   align-items: center;
   margin-top: 20px;
-  position: relative;
 }
 
 .circle {
@@ -61,23 +60,16 @@ h1 {
   height: 200px;
   border-radius: 50%;
   background: conic-gradient(
-    from 90deg, /* Start the gradient at 90 degrees */
-    #FFD700 0% calc((var(--percentage) * 1%)),
-    #E5E5E5 calc((var(--percentage) * 1%)) 100%
+    rgb(227, 43, 43) calc(var(--percentage) * 1%),
+    #e5e5e5 calc(var(--percentage) * 1%)
   );
-  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .percentage {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 24px;
+  font-size: 2rem;
   font-weight: bold;
   color: black;
 }
-
