@@ -252,13 +252,12 @@ const App = () => {
         category,
         id: scoresArray.map((item) => item.id).join(", "),
         score: scoresArray.map((item) => item.score).join(", "),
-        step: ` Total: ${total}, Average (Total/${
-          scoresArray.length
-        }): ${average.toFixed(
-          2
-        )}, Correction Score (-1): ${correctionscore.toFixed(
-          2
-        )} ,Percentage Score (Correction Score x 20): ${correctedAverage}%`,
+        steps: [
+          `Total: ${total}`,
+          `Average (Total/${scoresArray.length}): ${average.toFixed(2)}`,
+          `Correction Score (-1): ${correctionscore.toFixed(2)}`,
+          `Percentage Score (Correction Score x 20): ${correctedAverage}%`,
+        ].join("\n"),
       });
     }
 
@@ -439,7 +438,13 @@ const App = () => {
                   <td>{result.category}</td>
                   <td>{result.id}</td>
                   <td>{result.score}</td>
-                  <td>{result.step}</td>
+                  <td>
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: result.steps.replace(/\n/g, "<br />"),
+                      }}
+                    />
+                  </td>
                 </tr>
               ))}
               <tr>
