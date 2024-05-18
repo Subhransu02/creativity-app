@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { firestore, auth } from "./firebase";
-import { collection, addDoc } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+} from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
 import Chart from "chart.js/auto";
@@ -202,9 +209,43 @@ const App = () => {
 
   // Effect hook to check user authentication status
   useEffect(() => {
+    // Check if the user is logged in
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         setUser(user);
+        fetchUserScores(user.uid); // Fetch scores when the user logs in
+      } else {
+        navigate("/login");
+      }
+    });
+    return () => unsubscribe();
+  }, [navigate]);
+
+  // Function to fetch scores from Firestore
+  const fetchUserScores = async (userId) => {
+    try {
+      const userScoresRef = collection(firestore, "users", userId, "scores");
+      const querySnapshot = await getDocs(userScoresRef);
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        setScores(
+          data.scores.reduce(
+            (acc, score) => ({ ...acc, [score.statementId]: score.score }),
+            {}
+          )
+        );
+      });
+    } catch (error) {
+      console.error("Error fetching scores:", error);
+      // Handle error
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        setUser(user);
+        await fetchUserScores(user.uid); // Fetch user scores on login
       } else {
         navigate("/login");
       }
@@ -215,12 +256,15 @@ const App = () => {
   // Function to handle score change for each statement
   const handleChange = (id, value) => {
     if (value === "" || (value >= 1 && value <= 6)) {
-      setScores((prevScores) => ({ ...prevScores, [id]: value ? parseInt(value) : "" }));
+      setScores((prevScores) => ({
+        ...prevScores,
+        [id]: value ? parseInt(value) : "",
+      }));
     } else {
       alert("Please enter a number between 1 and 6.");
     }
   };
-  
+
   // Function to calculate scores based on user inputs
   const calculateScores = () => {
     let categoryScores = {
@@ -290,19 +334,20 @@ const App = () => {
 
   // Function to save scores to Firestore
   const saveScores = async () => {
-    // Check if user is authenticated
     if (!user) {
       alert("You must be logged in to save scores.");
       return;
     }
     try {
-      // Add scores to Firestore collection
       const userScoresRef = collection(firestore, "users", user.uid, "scores");
       await addDoc(userScoresRef, {
         scores: Object.keys(scores).map((id) => ({
           statementId: parseInt(id),
           score: scores[id],
         })),
+        totalF: totalF.toFixed(2),
+        totalD: totalD.toFixed(2),
+        overallScore,
         timestamp: new Date(),
       });
       alert("Scores saved successfully!");
@@ -314,7 +359,7 @@ const App = () => {
 
   // Effect hook to update pie chart when results change
   useEffect(() => {
-    // Create and update the pie chart when results change
+    // Update the pie chart when scores change
     const ctx = document.getElementById("pie-chart");
     let chartInstance = null;
 
@@ -355,7 +400,7 @@ const App = () => {
         chartInstance.destroy();
       }
     };
-  }, [overallScore]);
+  }, [overallScore, scores]); // Update when overallScore or scores change
 
   // JSX structure for rendering the component
   return (
