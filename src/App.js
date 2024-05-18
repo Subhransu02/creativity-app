@@ -214,14 +214,13 @@ const App = () => {
 
   // Function to handle score change for each statement
   const handleChange = (id, value) => {
-    const parsedValue = parseInt(value);
-    if (parsedValue >= 1 && parsedValue <= 6) {
-      setScores((prevScores) => ({ ...prevScores, [id]: parsedValue }));
+    if (value === "" || (value >= 1 && value <= 6)) {
+      setScores((prevScores) => ({ ...prevScores, [id]: value ? parseInt(value) : "" }));
     } else {
       alert("Please enter a number between 1 and 6.");
     }
   };
-
+  
   // Function to calculate scores based on user inputs
   const calculateScores = () => {
     let categoryScores = {
