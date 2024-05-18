@@ -5,7 +5,9 @@ import { useNavigate } from "react-router-dom";
 import "./App.css";
 import Chart from "chart.js/auto";
 
+// Array of statements with their respective IDs, texts, and categories
 const statements = [
+  // Each statement object contains an id, text, and category
   { id: 1, text: "I dislike unfamiliar situations.", category: "AA" },
   {
     id: 2,
@@ -189,6 +191,7 @@ const statements = [
 ];
 
 const App = () => {
+  // State variables to manage scores, results, user, and total scores
   const [scores, setScores] = useState({});
   const [results, setResults] = useState([]);
   const [user, setUser] = useState(null);
@@ -197,6 +200,7 @@ const App = () => {
   const [overallScore, setOverallScore] = useState(0);
   const navigate = useNavigate();
 
+  // Effect hook to check user authentication status
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
@@ -208,10 +212,17 @@ const App = () => {
     return () => unsubscribe();
   }, [navigate]);
 
+  // Function to handle score change for each statement
   const handleChange = (id, value) => {
-    setScores((prevScores) => ({ ...prevScores, [id]: parseInt(value) }));
+    const parsedValue = parseInt(value);
+    if (parsedValue >= 1 && parsedValue <= 6) {
+      setScores((prevScores) => ({ ...prevScores, [id]: parsedValue }));
+    } else {
+      alert("Please enter a number between 1 and 6.");
+    }
   };
 
+  // Function to calculate scores based on user inputs
   const calculateScores = () => {
     let categoryScores = {
       AA: [],
@@ -225,15 +236,18 @@ const App = () => {
 
     let detailedResults = [];
 
+    // Iterate through each statement to calculate scores
     statements.forEach((statement) => {
       const score = scores[statement.id] || 0;
       categoryScores[statement.category].push({ id: statement.id, score });
     });
 
+    // Variables to store category averages and total scores
     let categoryAverages = {};
     let totalF = 0;
     let totalD = 0;
 
+    // Iterate through category scores to calculate averages
     for (const category in categoryScores) {
       const scoresArray = categoryScores[category];
       const total = scoresArray.reduce((acc, val) => acc + val.score, 0);
@@ -242,12 +256,14 @@ const App = () => {
       const correctedAverage = (correctionscore * 20).toFixed(2);
       categoryAverages[category] = parseFloat(correctedAverage);
 
+      // Calculate total F and D scores
       if (["AA", "C", "FF", "T"].includes(category)) {
         totalF += categoryAverages[category];
       } else {
         totalD += categoryAverages[category];
       }
 
+      // Construct detailed results for each category
       detailedResults.push({
         category,
         id: scoresArray.map((item) => item.id).join(", "),
@@ -261,23 +277,27 @@ const App = () => {
       });
     }
 
+    // Calculate overall F and D scores and overall score
     totalF /= 4;
     totalD /= 3;
 
     const overallScore = ((totalF + totalD) / 2).toFixed(2);
-
+    // Set state with calculated scores and results
     setTotalF(totalF);
     setTotalD(totalD);
     setOverallScore(overallScore);
     setResults(detailedResults);
   };
 
+  // Function to save scores to Firestore
   const saveScores = async () => {
+    // Check if user is authenticated
     if (!user) {
       alert("You must be logged in to save scores.");
       return;
     }
     try {
+      // Add scores to Firestore collection
       const userScoresRef = collection(firestore, "users", user.uid, "scores");
       await addDoc(userScoresRef, {
         scores: Object.keys(scores).map((id) => ({
@@ -293,6 +313,7 @@ const App = () => {
     }
   };
 
+  // Effect hook to update pie chart when results change
   useEffect(() => {
     // Create and update the pie chart when results change
     const ctx = document.getElementById("pie-chart");
@@ -337,10 +358,18 @@ const App = () => {
     };
   }, [overallScore]);
 
+  // JSX structure for rendering the component
   return (
     <div className="App">
       <h1>Blocks to Creativity - Scoring & Measurement</h1>
       <div className="form-container">
+        {/* Scale description box at the start */}
+        <div className="scale-description">
+          <p>
+            6 - Completely Agree, 5 - Strongly Agree, 4 - Moderately Agree, 3 -
+            Moderately Disagree, 2 - Strongly Disagree, 1 - Completely Disagree
+          </p>
+        </div>
         <form
           id="creativityForm"
           style={{
@@ -349,6 +378,7 @@ const App = () => {
             alignItems: "center",
           }}
         >
+          {/* Table for displaying statements */}
           <table>
             <thead>
               <tr>
@@ -383,6 +413,7 @@ const App = () => {
               ))}
             </tbody>
           </table>
+          {/* Buttons to calculate scores and save scores */}
           <div style={{ marginTop: "20px" }}>
             <button
               type="button"
@@ -416,6 +447,14 @@ const App = () => {
             </button>
           </div>
         </form>
+        {/* Scale description box at the end */}
+        <div className="scale-description">
+          <p>
+            6 - Completely Agree, 5 - Strongly Agree, 4 - Moderately Agree, 3 -
+            Moderately Disagree, 2 - Strongly Disagree, 1 - Completely Disagree
+          </p>
+        </div>
+        {/* Container to display results */}
         <div id="results" className="results-container">
           <table className="results-table">
             <thead>
@@ -460,6 +499,7 @@ const App = () => {
             </tbody>
           </table>
         </div>
+        {/* Container for displaying pie chart */}
         <div className="circle-container">
           <div
             className="circle"
